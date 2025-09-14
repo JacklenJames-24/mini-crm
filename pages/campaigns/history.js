@@ -1,11 +1,24 @@
 import Layout from '../../components/Layout';
+import { useState, useEffect } from 'react';
 import { useContext } from 'react';
 import { AuthContext } from '../../contexts/AuthContext';
 
 export default function CampaignHistory() {
   const { user } = useContext(AuthContext);
-  const campaigns = JSON.parse(localStorage.getItem('campaigns') || '[]').sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  const logs = JSON.parse(localStorage.getItem('communication_logs') || '[]');
+  const [campaigns, setCampaigns] = useState([]);
+  const [logs, setLogs] = useState([]);
+
+  useEffect(() => {
+    // Only run on client side
+    if (typeof window !== 'undefined' && user) {
+      const storedCampaigns = JSON.parse(localStorage.getItem('campaigns') || '[]').sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      );
+      const storedLogs = JSON.parse(localStorage.getItem('communication_logs') || '[]');
+      setCampaigns(storedCampaigns);
+      setLogs(storedLogs);
+    }
+  }, [user]);
 
   if (!user) return null;
 
@@ -26,10 +39,10 @@ export default function CampaignHistory() {
               </tr>
             </thead>
             <tbody>
-              {campaigns.map(campaign => {
-                const campaignLogs = logs.filter(log => log.campaign_id === campaign.id);
-                const sent = campaignLogs.filter(l => l.status === 'sent').length;
-                const failed = campaignLogs.filter(l => l.status === 'failed').length;
+              {campaigns.map((campaign) => {
+                const campaignLogs = logs.filter((log) => log.campaign_id === campaign.id);
+                const sent = campaignLogs.filter((l) => l.status === 'sent').length;
+                const failed = campaignLogs.filter((l) => l.status === 'failed').length;
                 return (
                   <tr key={campaign.id} className="hover:bg-gray-50">
                     <td className="border p-2">{campaign.name}</td>
